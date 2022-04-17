@@ -6,11 +6,14 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <time.h>
-
+#include <fcntl.h>
+#include <termios.h>
 //Global Varibles
-int next_snake_x, next_snake_y,snakesize, dir;
+int next_snake_x, next_snake_y,snakesize, dir, curdir;
 int max_x, max_y;
+int input, lastin;
 bool game_over = false;
+bool moving = true;
 struct point{
     int x;
     int y;
@@ -19,58 +22,122 @@ struct point snake[] = {};
 
 //prototype functions
 void draw_borders();
-void snakemove();
+void move_snake(int nextx, int nexty);
 void init_snake();
 void refresh_screen();
+void no_blocking();
+void lose_game();
+void detect_collision();
 
-// Kevin Lynch, Quentin Carr, Lirim Mehmeti
+// Lirim Mehmeti, Kevin Lynch, Quentin Carr
 // main function
 int main(){
-    
     initscr(); // initialzes curses
     curs_set(false); // cursor hidden
     noecho(); // removes username
-    draw_borders();
+    no_blocking(); // turns off blocking mode for the keyboard terminal
     getmaxyx(stdscr, max_y, max_x); //gets the max x and y values for the terminal screen
-    int input;
-    srand(time(NULL)); // randomizes the seed for every execution of the file
     init_snake(max_y, max_x); //prints snake in a random direction in the center of the screen
-    for (int a = 0; a<snakesize; a++){
-        mvprintw(snake[a].y, snake[a].x,"o");
-        refresh();
+    refresh_screen(); // updates the screen 
+    
+    // a random direction at the start of the game
+    int startingDirection = rand() % 4;
+    switch (startingDirection) {
+        // move up
+        case 0:
+            next_snake_y--;
+            curdir= -1;
+            dir=0;
+            break;
+        // move down
+        case 1:
+            next_snake_y++;
+            curdir = +1;
+            dir=2;
+            break;
+        // move right
+        case 2:
+            next_snake_x++;
+            curdir = +1;
+            dir=1;
+            break;
+        // move left
+        case 3:
+            next_snake_x--;
+            curdir= -1;
+            dir=3;
+            break;
     }
+    
+    next_snake_x = snake[0].x;
+    next_snake_y = snake[0].y;
     //Main Loop
-    while(1){
+    while(!game_over){
         input = getch();
-        next_snake_x = snake[0].x;
-        next_snake_y = snake[0].y;
         switch(input){
-            case 'w':
+            case 'w': // input to move up
+                if(lastin == 's') // check if snake is reversing direction
+                    game_over = true;
                 next_snake_y--;
-                //mvprintw(1,1,"You pressed w");
+                curdir= -1;
+                dir=0;
+                moving = true;
+                lastin = input;
                 break;
-            case 's':
+            case 's': // input to move down
+            if(lastin == 'w') // check if snake is reversing direction
+                    game_over = true;
                 next_snake_y++;
-                //mvprintw(1,1,"You pressed s");
+                curdir = +1;
+                dir=2;
+                moving = true;
+                lastin = input;
                 break;
-            case 'd':
+            case 'd': // input to move right
+            if(lastin == 'a') // check if snake is reversing direction
+                    game_over = true;
                 next_snake_x++;
-                //mvprintw(1,1,"You pressed d");
+                curdir = +1;
+                dir=1;
+                moving = true;
+                lastin = input;
                 break;
-            case 'a':
+            case 'a': // input to move left
+            if(lastin == 'd') // check if snake is reversing direction
+                    game_over = true;
                 next_snake_x--;
-                //mvprintw(1,1,"You pressed a");
+                curdir= -1;
+                dir=3;
+                moving = true;
+                lastin = input;
                 break;
             default:
                 break;
         }
-        snake[snakesize -1].x = next_snake_x;
-        snake[snakesize -1].y = next_snake_y;
-        snakemove();
-        refresh_screen();
-    
+        if(moving) //if the snake is moving continue in the same direction
+        {
+            if(dir == 0 || dir == 2){
+                move_snake(next_snake_x, next_snake_y);
+                refresh_screen();
+                next_snake_y += curdir;
+                usleep (200000);
+                detect_collision(); // check if snake passes the boundary of the pit
 
+            }
+            if(dir == 1 || dir == 3){
+                move_snake(next_snake_x, next_snake_y);
+                refresh_screen();
+                next_snake_x += curdir;
+                usleep (200000);
+                detect_collision(); // check if snake passes the boundary of the pit
+            }
+        }
+    
+    refresh(); // refreshes screen
     }
+    erase();
+    while(game_over) // display game over screen
+        lose_game();
     endwin();
 }
 // Lirim Mehmeti
@@ -82,34 +149,41 @@ void draw_borders(){
 
     mvvline(0,0,'#',LINES);// Left line
     mvvline(1,COLS-2,'#',LINES-2);// Right line
-         
+            
 }
-// Kevin Lynch
-void snakemove()
+/*Kevin Lynch
+Used to update the x and y postions of each segement of the snake array*/
+void move_snake(int nextx, int nexty)
 {
-    struct point temp = snake[snakesize - 1]; // Temp struct used to hold the last position of the snake
-    //Moves the snake body in the direction of the next segement of the snake
-    for(int i = snakesize - 1; i > 0; i--)
+    struct point temp = snake[snakesize - 1];
+    struct point temp2; // Temp struct used to hold the last position of the snake
+    snake[snakesize -1].x = nextx;
+    snake[snakesize -1].y = nexty; 
+    for(int i = snakesize - 2; i > 0; i--)//Moves the snake body in the direction of the next segement of the snake
     {
-        snake[i] = snake[i - 1];
+        temp2 = snake[i];
+        snake[i] = temp;
+        temp = temp2;
     }
     snake[0] = temp; //sets the tail of the snake
 }
-// Kevin Lynch
-void init_snake(int max_y,int max_x) //set the start size of the snake and spawns the snake facing a random direction
+/*Kevin Lynch
+Used to set the starting positions x and y postions of each segemtn of the snake array in a random direction*/
+void init_snake(int max_y,int max_x) 
 {
     struct point current;
+    srand(time(NULL)); // randomizes the seed for every execution of the file
     snakesize = 5;
-    dir = rand() % 4;
     int j = 0;
     if(dir == 0) //Starting direction up
     {
-        for(int i = 0; i < snakesize; i++)
+        for(int i = 0; i < snakesize; i++) 
         {
             current.x = max_x / 2;
             current.y = (max_y / 2) - i;
             snake[j] = current;
             j++;
+            lastin = 'w';    
         }
     }
     else if (dir == 1) //Starting direction right
@@ -120,7 +194,8 @@ void init_snake(int max_y,int max_x) //set the start size of the snake and spawn
             current.y = max_y / 2;
             snake[j] = current;
             j++;
-        }  
+            lastin = 'd';
+        } 
     }
     else if(dir == 2) //Starting direction down
     {
@@ -130,6 +205,7 @@ void init_snake(int max_y,int max_x) //set the start size of the snake and spawn
             current.y = (max_y / 2) + i;
             snake[j] = current;
             j++;
+            lastin = 's';
         }  
     }
     else if (dir == 3) //Starting direction left
@@ -140,17 +216,49 @@ void init_snake(int max_y,int max_x) //set the start size of the snake and spawn
             current.y = max_y / 2;
             snake[j] = current;
             j++;
-        }  
+            lastin = 'a';
+        } 
     }
-refresh();    
-    
+refresh();       
 }
-void refresh_screen() //used to update the screen after every input so the snake maintains it size
+/*Kevin Lynch, Lirim Mehmeti(made some fixes to stop flickering)
+Used to update the screen and print the snake*/
+void refresh_screen()
 {
-    clear();
+    erase();
     draw_borders();
     for (int a = 0; a<snakesize; a++){            
-            mvprintw(snake[a].y, snake[a].x,"o");
+            mvprintw(snake[a].y, snake[a].x,"S");
         }
+    if (!moving){
+        mvprintw(1,1,"%s");
+    }
     refresh();
+    
+}
+/*Kevin Lynch
+Used to turn off Blocking input so the program doesn't wait for an input (ch. 6 of Molay book, pg 183)*/
+void no_blocking() 
+{
+    int termflag;
+    termflag = fcntl(0, F_GETFL);
+    termflag |= O_NDELAY;
+    fcntl(0,F_SETFL, termflag);
+
+}
+/*Kevin Lynch, Lirim Mehmeti(minor fix)
+Used to displays game over screen*/
+void lose_game() 
+{
+    mvprintw(max_y/2, (max_x/2) - 7,"Game Over, You lost!");
+    refresh();
+}
+/*Kevin Lynch
+Used to checks if snake is past the pit boundaries*/
+void detect_collision() 
+{
+    if (snake[snakesize -1].x <= 0 || snake[snakesize -1].x >= max_x)
+        game_over = true;
+    if (snake[snakesize -1].y <= 0 || snake[snakesize -1].y >= max_y)
+        game_over = true;
 }
