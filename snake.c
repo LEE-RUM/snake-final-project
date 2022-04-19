@@ -12,12 +12,13 @@
 #include <time.h>
 
 //Global Varibles
-int next_snake_x, next_snake_y,snakesize, dir, curdir, invin = 4;
+int next_snake_x, next_snake_y,snakesize, dir, curdir, invin = 4, speed = 200000;
 int max_x, max_y;
 int input, lastin;
 time_t currt, ttl;
 bool game_over = false;
 bool moving = true;
+bool hlight = true;
 struct point{
     int x;
     int y;
@@ -38,6 +39,7 @@ void init_snake();
 void refresh_screen();
 void no_blocking();
 void lose_game();
+void win_game();
 void detect_collision();
 void gen_trph();
 void print_trph();
@@ -133,9 +135,9 @@ int main(){
                 move_snake(next_snake_x, next_snake_y);
                 refresh_screen();
                 next_snake_y += curdir;
-                usleep (200000);
+                usleep (speed);
                 // gives the snake invinciblitiy for the first 4 frames
-                if(invin == 0)
+                if(invin == 0)                
                     detect_collision(); // check if snake passes the boundary of the pit
                 else
                     invin--;
@@ -145,7 +147,7 @@ int main(){
                 move_snake(next_snake_x, next_snake_y);
                 refresh_screen();
                 next_snake_x += curdir;
-                usleep (200000);
+                usleep (speed);
                 // gives the snake invinciblitiy for the first 4 frames
                 if(invin == 0)
                     detect_collision(); // check if snake passes the boundary of the pit
@@ -159,6 +161,7 @@ int main(){
     erase();
     while(game_over) // display game over screen
         lose_game();
+
     endwin();
 }
 // Lirim Mehmeti
@@ -276,25 +279,66 @@ void no_blocking()
 Used to displays game over screen*/
 void lose_game() 
 {
+    //Make message flash
+    if(hlight){    
+        standout();
+        hlight = false;
+    }
+    else {
+        standend();
+        hlight = true;
+    }
     mvprintw(max_y/2, (max_x/2) - 7,"Game Over, You lost!");
-
     refresh();
+    sleep(1);
    
+}
+/*Quentin Carr, Kevin Lynch, Lirim Mehmeti
+Used to displays game won screen*/
+void win_game() 
+{
+    //Make message flash
+    if(hlight){    
+        standout();
+        hlight = false;
+    }
+    else {
+        standend();
+        hlight = true;
+    }
+    mvprintw(max_y/2, (max_x/2) - 9,"Congratulations, You Won!!!");
+    refresh();
+    sleep(1);
 }
 /*Kevin Lynch, Quentin Carr
 Used to checks if snake is past the pit boundaries, hits itself, or got a trophy*/
 void detect_collision() 
 {
     //collision with wall
-    if (snake[snakesize -1].x <= 0 || snake[snakesize - 1].x >= max_x -1)
+    if (snake[snakesize -1].x <= 0 || snake[snakesize - 1].x >= max_x -1){
         game_over = true;
-    if (snake[snakesize -1].y <= 0 || snake[snakesize - 1].y >= max_y - 1)
+        return;
+    }
+    if (snake[snakesize -1].y <= 0 || snake[snakesize - 1].y >= max_y - 1){
         game_over = true;
+        return;
+    }
 
     //collision with trophy
     if (snake[snakesize -1].y == trophy1.y && snake[snakesize -1].x == trophy1.x){
+        //increase snake size and speed
         snakesize += trophy1.number;
-        gen_trph();
+        speed -= (trophy1.number * 1000);
+
+        //if snakesize bigger than half the parameter, player wins
+        if(((max_x * max_y)/2) > snakesize)        
+            gen_trph();
+        else{
+            erase();
+            while(true) // display game win screen
+                win_game();
+        }
+        return;
     }
 
     //collison with self
@@ -367,5 +411,4 @@ void print_trph(){
     //if the current time exceeds time-to-live generate a new trophy
     if(currt > ttl)
         gen_trph();
-
 }
