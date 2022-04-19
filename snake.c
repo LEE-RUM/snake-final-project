@@ -3,6 +3,7 @@
 
 #include <ncurses.h>
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <time.h>
@@ -11,7 +12,7 @@
 #include <time.h>
 
 //Global Varibles
-int next_snake_x, next_snake_y,snakesize, dir, curdir;
+int next_snake_x, next_snake_y,snakesize, dir, curdir, invin = 4;
 int max_x, max_y;
 int input, lastin;
 time_t currt, ttl;
@@ -133,7 +134,11 @@ int main(){
                 refresh_screen();
                 next_snake_y += curdir;
                 usleep (200000);
-                detect_collision(); // check if snake passes the boundary of the pit
+                // gives the snake invinciblitiy for the first 4 frames
+                if(invin == 0)
+                    detect_collision(); // check if snake passes the boundary of the pit
+                else
+                    invin--;
 
             }
             if(dir == 1 || dir == 3){
@@ -141,7 +146,11 @@ int main(){
                 refresh_screen();
                 next_snake_x += curdir;
                 usleep (200000);
-                detect_collision(); // check if snake passes the boundary of the pit
+                // gives the snake invinciblitiy for the first 4 frames
+                if(invin == 0)
+                    detect_collision(); // check if snake passes the boundary of the pit
+                else
+                    invin--;
             }
         }
     
@@ -156,11 +165,11 @@ int main(){
 // Using mvhline and mvvline to create border/pit
 void draw_borders(){
 
-    mvhline(0, 1, '#', COLS-2);// top of pit
-    mvhline(LINES-1,1,'#',COLS-2);//draws bottom of bit
+    mvhline(0, 1, '#', COLS-1);// top of pit
+    mvhline(LINES-1,1,'#',COLS-1);//draws bottom of bit
 
     mvvline(0,0,'#',LINES);// Left line
-    mvvline(1,COLS-2,'#',LINES-2);// Right line
+    mvvline(1,COLS-1,'#',LINES-2);// Right line
             
 }
 /*Kevin Lynch
@@ -180,12 +189,12 @@ void move_snake(int nextx, int nexty)
     snake[0] = temp; //sets the tail of the snake
 }
 /*Kevin Lynch
-Used to set the starting positions x and y postions of each segemtn of the snake array in a random direction*/
+Used to set the starting positions x and y postions of each segment of the snake array in a random direction*/
 void init_snake(int max_y,int max_x) 
 {
     struct point current;
     srand(time(NULL)); // randomizes the seed for every execution of the file
-    snakesize = 5;
+    snakesize = 3;
     int j = 0;
     if(dir == 0) //Starting direction up
     {
@@ -273,19 +282,30 @@ void lose_game()
    
 }
 /*Kevin Lynch, Quentin Carr
-Used to checks if snake is past the pit boundaries or got a trophy*/
+Used to checks if snake is past the pit boundaries, hits itself, or got a trophy*/
 void detect_collision() 
 {
     //collision with wall
-    if (snake[snakesize -1].x <= 0 || snake[snakesize -1].x >= max_x)
+    if (snake[snakesize -1].x <= 0 || snake[snakesize - 1].x >= max_x -1)
         game_over = true;
-    if (snake[snakesize -1].y <= 0 || snake[snakesize -1].y >= max_y)
+    if (snake[snakesize -1].y <= 0 || snake[snakesize - 1].y >= max_y - 1)
         game_over = true;
+
     //collision with trophy
     if (snake[snakesize -1].y == trophy1.y && snake[snakesize -1].x == trophy1.x){
         snakesize += trophy1.number;
         gen_trph();
     }
+
+    //collison with self
+    char* nxtpos;
+    nxtpos = (char*) malloc(2 * sizeof(char));
+
+    mvinnstr(next_snake_y, next_snake_x, nxtpos, 1);
+    if(nxtpos[0] == 'S')
+        game_over = true;
+
+    free(nxtpos);
 
 }
 
