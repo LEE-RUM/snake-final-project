@@ -272,14 +272,21 @@ void lose_game()
     refresh();
    
 }
-/*Kevin Lynch
-Used to checks if snake is past the pit boundaries*/
+/*Kevin Lynch, Quentin Carr
+Used to checks if snake is past the pit boundaries or got a trophy*/
 void detect_collision() 
 {
+    //collision with wall
     if (snake[snakesize -1].x <= 0 || snake[snakesize -1].x >= max_x)
         game_over = true;
     if (snake[snakesize -1].y <= 0 || snake[snakesize -1].y >= max_y)
         game_over = true;
+    //collision with trophy
+    if (snake[snakesize -1].y == trophy1.y && snake[snakesize -1].x == trophy1.x){
+        snakesize += trophy1.number;
+        gen_trph();
+    }
+
 }
 
 /*Quentin Carr
