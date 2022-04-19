@@ -8,16 +8,26 @@
 #include <time.h>
 #include <fcntl.h>
 #include <termios.h>
+#include <time.h>
+
 //Global Varibles
 int next_snake_x, next_snake_y,snakesize, dir, curdir;
 int max_x, max_y;
 int input, lastin;
+time_t currt, ttl;
 bool game_over = false;
 bool moving = true;
 struct point{
     int x;
     int y;
 };
+struct trophy{
+    int x;
+    int y;
+    int number;
+    char* str;
+};
+struct trophy trophy1; 
 struct point snake[] = {};
 
 //prototype functions
@@ -28,6 +38,8 @@ void refresh_screen();
 void no_blocking();
 void lose_game();
 void detect_collision();
+void gen_trph();
+void print_trph();
 
 // Lirim Mehmeti, Kevin Lynch, Quentin Carr
 // main function
@@ -219,7 +231,10 @@ void init_snake(int max_y,int max_x)
             lastin = 'a';
         } 
     }
-refresh();       
+    
+    gen_trph(); //Creates the starting trophy
+
+    refresh();       
 }
 /*Kevin Lynch, Lirim Mehmeti(made some fixes to stop flickering)
 Used to update the screen and print the snake*/
@@ -233,6 +248,8 @@ void refresh_screen()
     if (!moving){
         mvprintw(1,1,"%s");
     }
+    print_trph();
+    
     refresh();
     
 }
@@ -251,7 +268,9 @@ Used to displays game over screen*/
 void lose_game() 
 {
     mvprintw(max_y/2, (max_x/2) - 7,"Game Over, You lost!");
+
     refresh();
+   
 }
 /*Kevin Lynch
 Used to checks if snake is past the pit boundaries*/
@@ -261,4 +280,65 @@ void detect_collision()
         game_over = true;
     if (snake[snakesize -1].y <= 0 || snake[snakesize -1].y >= max_y)
         game_over = true;
+}
+
+/*Quentin Carr
+Generates variables for trophy structure*/
+void gen_trph(){
+    //Set Random Position for the trophy
+    trophy1.x = (rand() % (max_x-2))+1;
+    trophy1.y = (rand() % (max_y-2))+1;
+    //set random integer for trophy
+    trophy1.number = (rand() % 9) + 1;
+    //set random time-to-live for the trophy
+    ttl = time(NULL) + ((rand() % 9) + 1);
+
+    //convert int into char*
+    switch(trophy1.number){
+        case 1:
+            trophy1.str = "1";
+            break;
+        case 2:
+            trophy1.str = "2";
+            break;
+        case 3:
+            trophy1.str = "3";
+            break;
+        case 4:
+            trophy1.str = "4";
+            break;
+        case 5:
+            trophy1.str = "5";
+            break;
+        case 6:
+            trophy1.str = "6";
+            break;
+        case 7:
+            trophy1.str = "7";
+            break;
+        case 8:
+            trophy1.str = "8";
+            break;
+        case 9:
+            trophy1.str = "9";
+            break;
+        default:
+            trophy1.str = "0";
+            break;
+    }
+}
+
+/*Quentin Carr
+prints the current trophy in the window*/
+void print_trph(){
+    //get current time
+    currt = time(NULL);
+
+    //print the current trophy
+    mvprintw(trophy1.y, trophy1.x, trophy1.str);
+
+    //if the current time exceeds time-to-live generate a new trophy
+    if(currt > ttl)
+        gen_trph();
+
 }
