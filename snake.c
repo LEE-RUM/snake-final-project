@@ -356,9 +356,26 @@ void detect_collision()
 /*Quentin Carr
 Generates variables for trophy structure*/
 void gen_trph(){
+    bool i;
+    char* pos;
+    pos = (char*) malloc(2 * sizeof(char));
+
     //Set Random Position for the trophy
+    do {
     trophy1.x = (rand() % (max_x-2))+1;
     trophy1.y = (rand() % (max_y-2))+1;
+
+    //check if the trophy will spawn on the snake body, if so, choose a different location
+    mvinnstr(trophy1.y, trophy1.x, pos, 1);
+    if(pos[0] == 'S')
+        i = true;
+    else
+        i = false;
+
+    } while(i);
+
+    free(pos);
+    
     //set random integer for trophy
     trophy1.number = (rand() % 9) + 1;
     //set random time-to-live for the trophy
@@ -392,9 +409,6 @@ void gen_trph(){
             break;
         case 9:
             trophy1.str = "9";
-            break;
-        default:
-            trophy1.str = "0";
             break;
     }
 }
