@@ -9,11 +9,10 @@
 #include <time.h>
 #include <fcntl.h>
 #include <termios.h>
-#include <time.h>
 
 //Global Varibles
 int next_snake_x, next_snake_y,snakesize, dir, curdir, invin = 4, speed = 200000;
-int max_x, max_y;
+int max_x, max_y, winsize;
 int input, lastin;
 time_t currt, ttl;
 bool game_over = false;
@@ -52,6 +51,7 @@ int main(){
     noecho(); // removes username
     no_blocking(); // turns off blocking mode for the keyboard terminal
     getmaxyx(stdscr, max_y, max_x); //gets the max x and y values for the terminal screen
+    winsize = (max_x * max_y)/2; //Sets the snake size needed to win
     init_snake(max_y, max_x); //prints snake in a random direction in the center of the screen
     refresh_screen(); // updates the screen 
     
@@ -164,15 +164,26 @@ int main(){
 
     endwin();
 }
-// Lirim Mehmeti
+// Lirim Mehmeti, Quentin Carr (Graphics)
 // Using mvhline and mvvline to create border/pit
 void draw_borders(){
 
+    start_color();
+    init_pair(2, COLOR_BLUE, COLOR_BLUE);
+    init_pair(5, COLOR_WHITE, COLOR_BLUE);
+
+    attron(COLOR_PAIR(2));
     mvhline(0, 1, '#', COLS-1);// top of pit
     mvhline(LINES-1,1,'#',COLS-1);//draws bottom of bit
 
     mvvline(0,0,'#',LINES);// Left line
     mvvline(1,COLS-1,'#',LINES-2);// Right line
+    attroff(COLOR_PAIR(2));
+
+    int tleft = ttl - currt;
+    attron(COLOR_PAIR(5));
+    mvprintw(0, (max_x/2) - 23,"Size: %d     Size To Win: %d     Trophy Life: %d", snakesize, winsize, tleft);
+    attron(COLOR_PAIR(5));
             
 }
 /*Kevin Lynch
@@ -248,15 +259,21 @@ void init_snake(int max_y,int max_x)
 
     refresh();       
 }
-/*Kevin Lynch, Lirim Mehmeti(made some fixes to stop flickering)
+/*Kevin Lynch, Lirim Mehmeti(made some fixes to stop flickering), Quentin Carr (Graphics)
 Used to update the screen and print the snake*/
 void refresh_screen()
 {
     erase();
     draw_borders();
-    for (int a = 0; a<snakesize; a++){            
+    
+    start_color();
+    init_pair(1, COLOR_GREEN, COLOR_GREEN);
+    
+    attron(COLOR_PAIR(1));
+    for (int a = 0; a<snakesize; a++){           
             mvprintw(snake[a].y, snake[a].x,"S");
         }
+    attroff(COLOR_PAIR(1));
     if (!moving){
         mvprintw(1,1,"%s");
     }
@@ -275,10 +292,13 @@ void no_blocking()
     fcntl(0,F_SETFL, termflag);
 
 }
-/*Kevin Lynch, Lirim Mehmeti(minor fix)
+/*Kevin Lynch, Lirim Mehmeti(minor fix), Quentin Carr (graphics)
 Used to displays game over screen*/
 void lose_game() 
 {
+    start_color();
+    init_pair(1, COLOR_BLACK, COLOR_RED);
+
     //Make message flash
     if(hlight){    
         standout();
@@ -288,7 +308,11 @@ void lose_game()
         standend();
         hlight = true;
     }
+    attron(COLOR_PAIR(1));
+    attron(A_BOLD);
     mvprintw(max_y/2, (max_x/2) - 7,"Game Over, You lost!");
+    attroff(A_BOLD);
+    attroff(COLOR_PAIR(1));
     refresh();
     sleep(1);
    
@@ -306,7 +330,9 @@ void win_game()
         standend();
         hlight = true;
     }
+    attron(A_BLINK);
     mvprintw(max_y/2, (max_x/2) - 9,"Congratulations, You Won!!!");
+    attroff(A_BLINK);
     refresh();
     sleep(1);
 }
@@ -328,10 +354,10 @@ void detect_collision()
     if (snake[snakesize -1].y == trophy1.y && snake[snakesize -1].x == trophy1.x){
         //increase snake size and speed
         snakesize += trophy1.number;
-        speed -= (trophy1.number * 1000);
+        speed -= (trophy1.number * 500);
 
         //if snakesize bigger than half the parameter, player wins
-        if(((max_x * max_y)/2) > snakesize)        
+        if(winsize > snakesize)        
             gen_trph();
         else{
             erase();
@@ -360,6 +386,11 @@ void gen_trph(){
     char* pos;
     pos = (char*) malloc(2 * sizeof(char));
 
+    //set random integer for trophy
+    trophy1.number = (rand() % 9) + 1;
+    //set random time-to-live for the trophy
+    ttl = time(NULL) + ((rand() % 9) + 1);
+
     //Set Random Position for the trophy
     do {
     trophy1.x = (rand() % (max_x-2))+1;
@@ -375,11 +406,6 @@ void gen_trph(){
     } while(i);
 
     free(pos);
-    
-    //set random integer for trophy
-    trophy1.number = (rand() % 9) + 1;
-    //set random time-to-live for the trophy
-    ttl = time(NULL) + ((rand() % 9) + 1);
 
     //convert int into char*
     switch(trophy1.number){
@@ -409,18 +435,26 @@ void gen_trph(){
             break;
         case 9:
             trophy1.str = "9";
-            break;
+            break;        
     }
 }
 
 /*Quentin Carr
 prints the current trophy in the window*/
 void print_trph(){
+
     //get current time
     currt = time(NULL);
 
+    start_color();
+    init_pair(3, COLOR_WHITE, COLOR_YELLOW);
+
     //print the current trophy
+    attron(COLOR_PAIR(3));
+    attron(A_BOLD);
     mvprintw(trophy1.y, trophy1.x, trophy1.str);
+    attroff(A_BOLD);
+    attroff(COLOR_PAIR(3));
 
     //if the current time exceeds time-to-live generate a new trophy
     if(currt > ttl)
