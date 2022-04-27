@@ -11,13 +11,10 @@
 #include <termios.h>
 
 //Global Varibles
-int next_snake_x, next_snake_y,snakesize, dir, curdir, invin = 4, speed = 200000;
-int max_x, max_y, winsize;
-int input, lastin;
+int next_snake_x, next_snake_y, snakesize, dir, curdir, invin = 4, speed = 250000;
+int max_x, max_y, winsize, input, lastin;
 time_t currt, ttl;
-bool game_over = false;
-bool moving = true;
-bool hlight = true;
+bool game_over = false, moving = true, hlight = true;
 struct point{
     int x;
     int y;
@@ -25,7 +22,7 @@ struct point{
 struct trophy{
     int x;
     int y;
-    int number;
+    int value;
     char* str;
 };
 struct trophy trophy1; 
@@ -180,7 +177,7 @@ void draw_borders(){
     mvvline(1,COLS-1,'#',LINES-2);// Right line
     attroff(COLOR_PAIR(2));
 
-    int tleft = ttl - currt;
+    int tleft = ttl-currt;
     attron(COLOR_PAIR(5));
     mvprintw(0, (max_x/2) - 23,"Size: %d     Size To Win: %d     Trophy Life: %d", snakesize, winsize, tleft);
     attron(COLOR_PAIR(5));
@@ -254,8 +251,9 @@ void init_snake(int max_y,int max_x)
             lastin = 'a';
         } 
     }
-    
-    gen_trph(); //Creates the starting trophy
+
+    //Creates the starting trophy
+    gen_trph(); 
 
     refresh();       
 }
@@ -290,7 +288,6 @@ void no_blocking()
     termflag = fcntl(0, F_GETFL);
     termflag |= O_NDELAY;
     fcntl(0,F_SETFL, termflag);
-
 }
 /*Kevin Lynch, Lirim Mehmeti(minor fix), Quentin Carr (graphics)
 Used to displays game over screen*/
@@ -311,11 +308,11 @@ void lose_game()
     attron(COLOR_PAIR(1));
     attron(A_BOLD);
     mvprintw(max_y/2, (max_x/2) - 7,"Game Over, You lost!");
+    mvprintw(max_y/2 + 1, (max_x/2) - 4,"Final score: %d", snakesize);
     attroff(A_BOLD);
     attroff(COLOR_PAIR(1));
     refresh();
     sleep(1);
-   
 }
 /*Quentin Carr, Kevin Lynch, Lirim Mehmeti
 Used to displays game won screen*/
@@ -353,8 +350,8 @@ void detect_collision()
     //collision with trophy
     if (snake[snakesize -1].y == trophy1.y && snake[snakesize -1].x == trophy1.x){
         //increase snake size and speed
-        snakesize += trophy1.number;
-        speed -= (trophy1.number * 500);
+        snakesize += trophy1.value;
+        speed -= (trophy1.value * 500);
 
         //if snakesize bigger than half the parameter, player wins
         if(winsize > snakesize)        
@@ -376,39 +373,72 @@ void detect_collision()
         game_over = true;
 
     free(nxtpos);
-
 }
 
 /*Quentin Carr
-Generates variables for trophy structure*/
+Generates variables for trophy structure such that the tophy spawns as follows
+    -> Within the terminal boundries
+    -> Not on snake body    
+    -> Random value 1-9
+    -> Random time-to-live 1-9 seconds
+    -> Within reach of the snake head before ttl expires*/
 void gen_trph(){
-    bool i;
-    char* pos;
-    pos = (char*) malloc(2 * sizeof(char));
+    int txmax, txmin, tymax, tymin;
+    bool i = false;
+    char* pos = (char*) calloc(1, sizeof(char));
 
     //set random integer for trophy
-    trophy1.number = (rand() % 9) + 1;
-    //set random time-to-live for the trophy
-    ttl = time(NULL) + ((rand() % 9) + 1);
+    trophy1.value = ((rand() % 9) + 1);
+    //set random time-to-live value for the trophy
+    double ttlv = ((rand() % 9) + 1);
+    ttl = time(NULL)+ttlv;
 
-    //Set Random Position for the trophy
-    do {
-    trophy1.x = (rand() % (max_x-2))+1;
-    trophy1.y = (rand() % (max_y-2))+1;
+    //get number of characters per second the snake can move
+    double cps = (double)speed/1000000.0;
+    //set max distance of trophy based off cps
+    double maxdis = ttlv/cps;
 
-    //check if the trophy will spawn on the snake body, if so, choose a different location
-    mvinnstr(trophy1.y, trophy1.x, pos, 1);
-    if(pos[0] == 'S')
-        i = true;
-    else
-        i = false;
+    do{
+        //set max and min for x position of trophy
+        txmax = next_snake_x + maxdis;
+        txmin = next_snake_x - maxdis;
 
-    } while(i);
+        //make sure the max and min are within the terminal window
+        if(txmax > max_x-1)
+            txmax = max_x-2;
+        if(txmin < 1)
+            txmin = 1;
+
+        //set random x position for trophy
+        trophy1.x = (rand() % (txmax-txmin+1))+txmin;
+
+        //get max y position based off x psoition 
+        maxdis -= abs(next_snake_x-trophy1.x);
+
+        //set max and min for y position of trophy
+        tymax = next_snake_y + maxdis;
+        tymin = next_snake_y - maxdis;
+
+        //make sure the max and min are within the terminal window
+        if(tymax > max_y-2)
+            tymax = max_y-2;
+        if(tymin < 1)
+            tymin = 1;
+
+        //set random y position for trophy
+        trophy1.y = (rand() % (tymax-tymin+1))+tymin;
+
+        mvinnstr(trophy1.y, trophy1.x, pos, 1);
+        if(pos[0] == 'S')
+            i = true;
+        else
+            i = false;
+    }while(i);
 
     free(pos);
 
     //convert int into char*
-    switch(trophy1.number){
+    switch(trophy1.value){
         case 1:
             trophy1.str = "1";
             break;
