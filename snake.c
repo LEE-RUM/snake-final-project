@@ -333,6 +333,7 @@ void win_game()
     attron(COLOR_PAIR(4));
     attron(A_BOLD);
     mvprintw(max_y/2, (max_x/2) - 9,"Congratulations, You Won!!!");
+    mvprintw(max_y/2 + 1, (max_x/2) - 4,"Final score: %d", snakesize);
     attroff(A_BOLD);
     attroff(COLOR_PAIR(4));
     refresh();
