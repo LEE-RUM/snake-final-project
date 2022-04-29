@@ -199,7 +199,7 @@ void move_snake(int nextx, int nexty)
     }
     snake[0] = temp; //sets the tail of the snake
 }
-/*Kevin Lynch
+/*Kevin Lynch, Lirim Mehmeti (bug fixes)
 Used to set the starting positions x and y postions of each segment of the snake array in a random direction*/
 void init_snake(int max_y,int max_x) 
 {
@@ -212,7 +212,7 @@ void init_snake(int max_y,int max_x)
         for(int i = 0; i < snakesize; i++) 
         {
             current.x = max_x / 2;
-            current.y = (max_y / 2) - i;
+            current.y = (max_y / 2);
             snake[j] = current;
             j++;
             lastin = 'w';    
@@ -222,7 +222,7 @@ void init_snake(int max_y,int max_x)
     {
         for(int i = 0; i < snakesize; i++)
         {
-            current.x = (max_x / 2) - i;
+            current.x = (max_x / 2);
             current.y = max_y / 2;
             snake[j] = current;
             j++;
@@ -234,7 +234,7 @@ void init_snake(int max_y,int max_x)
         for(int i = 0; i < snakesize; i++)
         {
             current.x = max_x / 2;
-            current.y = (max_y / 2) + i;
+            current.y = (max_y / 2);
             snake[j] = current;
             j++;
             lastin = 's';
@@ -244,7 +244,7 @@ void init_snake(int max_y,int max_x)
     {
         for(int i = 0; i < snakesize; i++)
         {
-            current.x = (max_x / 2) + i;
+            current.x = (max_x / 2);
             current.y = max_y / 2;
             snake[j] = current;
             j++;
