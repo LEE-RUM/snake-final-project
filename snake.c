@@ -48,7 +48,7 @@ int main(){
     noecho(); // removes username
     no_blocking(); // turns off blocking mode for the keyboard terminal
     getmaxyx(stdscr, max_y, max_x); //gets the max x and y values for the terminal screen
-    winsize = (max_x * max_y)/2; //Sets the snake size needed to win
+    winsize = max_x + max_y; //Sets the snake size needed to win
     init_snake(max_y, max_x); //prints snake in a random direction in the center of the screen
     refresh_screen(); // updates the screen 
     
@@ -357,7 +357,9 @@ void detect_collision()
     if (snake[snakesize - 1].y == trophy1.y && snake[snakesize - 1].x == trophy1.x){
         //increase snake size and speed
         snakesize += trophy1.value;
-        speed -= (trophy1.value * 500);
+        //set max speed to 80000
+        if (speed>80000)
+            speed -= (trophy1.value * 500);
 
         //if snakesize bigger than half the parameter, player wins
         if(winsize > snakesize)        
@@ -388,10 +390,20 @@ Generates variables for trophy structure such that the tophy spawns as follows
     -> Random time-to-live 1-9 seconds
     -> Within reach of the snake head before ttl expires*/
 void gen_trph(){
-    int txmax=1, txmin=1, tymax=1, tymin=1;
-    int snakex = snake[snakesize -1].x, snakey = snake[snakesize -1].y;
+    //initialize variables to prevent floating point exception
+    int txmax=1, txmin=1, tymax=1, tymin=1, snakex, snakey;
     bool i = false;
     char* pos = (char*) calloc(2, sizeof(char));
+
+    //make sure first trophy is within reach of the snake
+    if(invin > 0){
+        snakex = max_x/2;
+        snakey = max_y/2;
+    }
+    else{
+        snakex = next_snake_x;
+        snakey = next_snake_y;
+    }
 
     //set random integer for trophy
     trophy1.value = ((rand() % 9) + 1);
