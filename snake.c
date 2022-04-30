@@ -11,7 +11,7 @@
 #include <termios.h>
 
 //Global Varibles
-int next_snake_x, next_snake_y, snakesize, dir, curdir, invin = 4, speed = 205000;
+int next_snake_x, next_snake_y, snakesize, dir, curdir, invin = 4, speed = 200000;
 int max_x, max_y, winsize, input, lastin;
 time_t currt, ttl;
 bool game_over = false, moving = true, hlight = true;
@@ -88,8 +88,6 @@ int main(){
         input = getch();
         switch(input){
             case 'w': // input to move up
-                if(lastin == 's') // check if snake is reversing direction
-                    game_over = true;
                 next_snake_y--;
                 curdir= -1;
                 dir=0;
@@ -97,8 +95,6 @@ int main(){
                 lastin = input;
                 break;
             case 's': // input to move down
-            if(lastin == 'w') // check if snake is reversing direction
-                    game_over = true;
                 next_snake_y++;
                 curdir = +1;
                 dir=2;
@@ -106,8 +102,6 @@ int main(){
                 lastin = input;
                 break;
             case 'd': // input to move right
-            if(lastin == 'a') // check if snake is reversing direction
-                    game_over = true;
                 next_snake_x++;
                 curdir = +1;
                 dir=1;
@@ -115,8 +109,6 @@ int main(){
                 lastin = input;
                 break;
             case 'a': // input to move left
-            if(lastin == 'd') // check if snake is reversing direction
-                    game_over = true;
                 next_snake_x--;
                 curdir= -1;
                 dir=3;
@@ -170,21 +162,21 @@ void draw_borders(){
     init_pair(5, COLOR_WHITE, COLOR_BLUE);
 
     attron(COLOR_PAIR(2));
-    mvhline(0, 1, '#', COLS-1);// top of pit
-    mvhline(LINES-1,1,'#',COLS-1);//draws bottom of bit
+        mvhline(0, 1, '#', COLS-1);// top of pit
+        mvhline(LINES-1,1,'#',COLS-1);//draws bottom of bit
 
-    mvvline(0,0,'#',LINES);// Left line
-    mvvline(1,COLS-1,'#',LINES-2);// Right line
+        mvvline(0,0,'#',LINES);// Left line
+        mvvline(1,COLS-1,'#',LINES-2);// Right line
     attroff(COLOR_PAIR(2));
 
     int tleft = ttl-currt;
     attron(COLOR_PAIR(5));
-    mvprintw(0, (max_x/2) - 23,"Size: %d     Size To Win: %d     Trophy Life: %d", snakesize, winsize, tleft);
+        mvprintw(0, (max_x/2) - 23,"Size: %d     Size To Win: %d     Trophy Life: %d", snakesize, winsize, tleft);
     attron(COLOR_PAIR(5));
             
 }
 /*Kevin Lynch
-Used to update the x and y postions of each segement of the snake array*/
+Used to update the x and y positions of each segment of the snake array*/
 void move_snake(int nextx, int nexty)
 {
     struct point temp = snake[snakesize - 1];
@@ -258,7 +250,7 @@ void init_snake(int max_y,int max_x)
     refresh();       
 }
 /*Kevin Lynch, Lirim Mehmeti(made some fixes to stop flickering), Quentin Carr (Graphics)
-Used to update the screen and print the snake*/
+Used to update the screen and print the snake, borders, and trophies*/
 void refresh_screen()
 {
     erase();
@@ -268,9 +260,9 @@ void refresh_screen()
     init_pair(1, COLOR_GREEN, COLOR_GREEN);
     
     attron(COLOR_PAIR(1));
-    for (int a = 0; a<snakesize; a++){           
-            mvprintw(snake[a].y, snake[a].x,"S");
-        }
+        for (int a = 0; a<snakesize; a++){           
+                mvprintw(snake[a].y, snake[a].x,"S");
+            }
     attroff(COLOR_PAIR(1));
     if (!moving){
         mvprintw(1,1,"%s");
@@ -278,7 +270,6 @@ void refresh_screen()
     print_trph();
     
     refresh();
-    
 }
 /*Kevin Lynch
 Used to turn off Blocking input so the program doesn't wait for an input (ch. 6 of Molay book, pg 183)*/
@@ -307,8 +298,8 @@ void lose_game()
     }
     attron(COLOR_PAIR(3));
     attron(A_BOLD);
-    mvprintw(max_y/2, (max_x/2) - 7,"Game Over, You lost!");
-    mvprintw(max_y/2 + 1, (max_x/2) - 4,"Final score: %d", snakesize);
+        mvprintw(max_y/2, (max_x/2) - 7,"Game Over, You lost!");
+        mvprintw(max_y/2 + 1, (max_x/2) - 4,"Final score: %d", snakesize);
     attroff(A_BOLD);
     attroff(COLOR_PAIR(3));
     refresh();
@@ -332,8 +323,8 @@ void win_game()
     }
     attron(COLOR_PAIR(4));
     attron(A_BOLD);
-    mvprintw(max_y/2, (max_x/2) - 9,"Congratulations, You Won!!!");
-    mvprintw(max_y/2 + 1, (max_x/2) - 4,"Final score: %d", snakesize);
+        mvprintw(max_y/2, (max_x/2) - 9,"Congratulations, You Won!!!");
+        mvprintw(max_y/2 + 1, (max_x/2) - 4,"Final score: %d", snakesize);
     attroff(A_BOLD);
     attroff(COLOR_PAIR(4));
     refresh();
@@ -412,16 +403,10 @@ void gen_trph(){
     ttl = time(NULL)+ttlv;
 
     //get number of characters per second the snake can move
-    double cps = (double)speed/1000000.0;
-
-    //floating point exception handling
-    if(ttlv<=0)
-        ttlv=4;
-    if(cps<=0)
-        cps=205000.0/1000000.0;
+    double cps = speed/1000000.0;
 
     //set max distance of trophy based off cps
-    double maxdis = (double)ttlv/cps;
+    double maxdis = ttlv/cps;
     
     do{
         //set max and min for x position of trophy
@@ -463,7 +448,7 @@ void gen_trph(){
                 trophy1.y = (rand() % (tymax-tymin+1))+tymin;
         }
 
-        //check if the trophy will spanw on snake body, if true get a different position
+        //check if the trophy will spawn on snake body, if true get a different position
         mvinnstr(trophy1.y, trophy1.x, pos, 1);
         if(pos[0] == 'S')
             i = true;
@@ -473,7 +458,7 @@ void gen_trph(){
 
     free(pos);
 
-    //convert int into char*
+    //convert int into char* to output trophy in window
     switch(trophy1.value){
         case 1:
             trophy1.str = "1";
@@ -518,7 +503,7 @@ void print_trph(){
     //print the current trophy
     attron(COLOR_PAIR(6));
     attron(A_BOLD);
-    mvprintw(trophy1.y, trophy1.x, trophy1.str);
+        mvprintw(trophy1.y, trophy1.x, trophy1.str);
     attroff(A_BOLD);
     attroff(COLOR_PAIR(6));
 
