@@ -197,6 +197,7 @@ void init_snake(int max_y,int max_x)
 {
     struct point current;
     srand(time(NULL)); // randomizes the seed for every execution of the file
+    dir = rand() % 4; // gets random starting direction
     snakesize = 3;
     int j = 0;
     if(dir == 0) //Starting direction up
