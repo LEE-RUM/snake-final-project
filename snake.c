@@ -344,6 +344,15 @@ void detect_collision()
         game_over = true;
         return;
     }
+    
+    //collison with self
+    char* nxtpos = (char*) calloc(2, sizeof(char));
+
+    mvinnstr(next_snake_y, next_snake_x, nxtpos, 1);
+    if(nxtpos[0] == 'S')
+        game_over = true;
+
+    free(nxtpos);
 
     //collision with trophy
     if (snake[snakesize - 1].y == trophy1.y && snake[snakesize - 1].x == trophy1.x){
@@ -358,20 +367,12 @@ void detect_collision()
             gen_trph();
         else{
             erase();
-            while(true) // display game win screen
+            // display game win screen
+            while(true)
                 win_game();
         }
         return;
     }
-
-    //collison with self
-    char* nxtpos = (char*) calloc(2, sizeof(char));
-
-    mvinnstr(next_snake_y, next_snake_x, nxtpos, 1);
-    if(nxtpos[0] == 'S')
-        game_over = true;
-
-    free(nxtpos);
 }
 
 /*Quentin Carr
@@ -405,7 +406,6 @@ void gen_trph(){
 
     //get number of characters per second the snake can move
     double cps = speed/1000000.0;
-
     //set max distance of trophy based off cps
     double maxdis = ttlv/cps;
     
@@ -420,7 +420,7 @@ void gen_trph(){
         if(txmin < 1)
             txmin = 1;
 
-        //set random x position for trophy and check for floating point exception
+        //check for floating point exception, set random x position for trophy
         if((txmax-txmin+1) == 0)
             trophy1.x = snakex + 1;
         else
@@ -455,7 +455,7 @@ void gen_trph(){
             i = true;
         else
             i = false;
-    }while(i);
+      }while(i);
 
     free(pos);
 
@@ -494,10 +494,8 @@ void gen_trph(){
 /*Quentin Carr
 prints the current trophy in the window*/
 void print_trph(){
-
     //get current time
     currt = time(NULL);
-
     start_color();
     init_pair(6, COLOR_WHITE, COLOR_YELLOW);
 
