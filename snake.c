@@ -44,6 +44,7 @@ void print_trph();
 // main function
 int main(){
     initscr(); // initialzes curses
+    start_color(); 
     curs_set(false); // cursor hidden
     noecho(); // removes username
     no_blocking(); // turns off blocking mode for the keyboard terminal
