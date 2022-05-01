@@ -11,7 +11,7 @@
 #include <termios.h>
 
 //Global Varibles
-int next_snake_x, next_snake_y, snakesize, dir, curdir, invin = 4, speed = 200000;
+int next_snake_x, next_snake_y, snakesize, dir, curdir, invin = 4, speed = 160000;
 int max_x, max_y, winsize, input;
 time_t currt, ttl;
 bool game_over = false, game_win = false, moving = true, hlight = true;
@@ -195,9 +195,9 @@ void draw_borders(){
     attron(COLOR_PAIR(5));
     
         mvprintw(0, (max_x/2) - 23,"Size: %d     Size To Win: %d     Trophy Life: %d", snakesize, winsize, tleft);
-        mvprintw(max_y/2 + 18, (max_x/2) - 18," HOW TO PLAY: W A S D / KEYPAD");    attron(COLOR_PAIR(5));
+        mvprintw(max_y-1, (max_x/2) - 18," HOW TO PLAY: W A S D / KEYPAD");
 
-    attron(COLOR_PAIR(5));
+    attroff(COLOR_PAIR(5));
             
 }
 /*Kevin Lynch
@@ -325,7 +325,7 @@ void lose_game()
     attroff(A_BOLD);
     attroff(COLOR_PAIR(3));
 
-    mvprintw(max_y/2 + 2, (max_x/2) - 15,"Would you like to play again? (y/n)");
+    mvprintw(max_y/2 + 2, (max_x/2) - 14,"Would you like to play again? (y/n)");
 
     refresh();
     sleep(1);
@@ -353,7 +353,7 @@ void win_game()
     attroff(A_BOLD);
     attroff(COLOR_PAIR(4));
 
-    mvprintw(max_y/2 + 2, (max_x/2) - 15,"Would you like to play again? (y/n)");
+    mvprintw(max_y/2 + 2, (max_x/2) - 14,"Would you like to play again? (y/n)");
 
     refresh();
     sleep(1);
