@@ -14,7 +14,7 @@
 int next_snake_x, next_snake_y, snakesize, dir, curdir, invin = 4, speed = 200000;
 int max_x, max_y, winsize, input;
 time_t currt, ttl;
-bool game_over = false, moving = true, hlight = true;
+bool game_over = false, game_win = false, moving = true, hlight = true;
 struct point{
     int x;
     int y;
@@ -39,10 +39,12 @@ void win_game();
 void detect_collision();
 void gen_trph();
 void print_trph();
+int new_game(char fname[]);
+int end_game();
 
 // Lirim Mehmeti, Kevin Lynch, Quentin Carr
 // main function
-int main(){
+int main(int argc, char** argv){
     initscr(); // initialzes curses
     start_color(); 
     curs_set(false); // cursor hidden
@@ -52,6 +54,7 @@ int main(){
     winsize = max_x + max_y; //Sets the snake size needed to win
     init_snake(max_y, max_x); //prints snake in a random direction in the center of the screen
     refresh_screen(); // updates the screen 
+    keypad(stdscr,TRUE);
     
     // a random direction at the start of the game
     int startingDirection = rand() % 4;
@@ -85,28 +88,32 @@ int main(){
     next_snake_x = snake[0].x;
     next_snake_y = snake[0].y;
     //Main Loop
-    while(!game_over){
+    while(!game_over && !game_win){
         input = getch();
         switch(input){
             case 'w': // input to move up
+            case KEY_UP:
                 next_snake_y--;
                 curdir= -1;
                 dir=0;
                 moving = true;
                 break;
             case 's': // input to move down
+            case KEY_DOWN:
                 next_snake_y++;
                 curdir = +1;
                 dir=2;
                 moving = true;
                 break;
             case 'd': // input to move right
+            case KEY_RIGHT:
                 next_snake_x++;
                 curdir = +1;
                 dir=1;
                 moving = true;
                 break;
             case 'a': // input to move left
+            case KEY_LEFT:
                 next_snake_x--;
                 curdir= -1;
                 dir=3;
@@ -141,13 +148,31 @@ int main(){
                     invin--;
             }
         }
-    
+    //if snakesize bigger than half the perimeter, player wins
+    if(winsize <= snakesize) 
+        game_win = true;
     refresh(); // refreshes screen
     }
     erase();
-    while(game_over) // display game over screen
+    // display game over screen
+    while(game_over){
         lose_game();
+        input = getch();
+        if(input == 'y' || input == 'Y')
+            new_game(argv[0]);
+        if(input == 'n'||input == 'N')
+            end_game();
+    }
 
+    //display game win screen
+    while(game_win){
+        win_game();
+        input = getch();
+        if(input == 'y' || input == 'Y')
+            new_game(argv[0]);
+        if(input == 'n'||input == 'N')
+            end_game();
+    }
     endwin();
 }
 // Lirim Mehmeti, Quentin Carr (Graphics)
@@ -205,6 +230,7 @@ void init_snake(int max_y,int max_x)
             current.y = (max_y / 2);
             snake[j] = current;
             j++;
+            lastin = 'w';    
         }
     }
     else if (dir == 1) //Starting direction right
@@ -215,6 +241,7 @@ void init_snake(int max_y,int max_x)
             current.y = max_y / 2;
             snake[j] = current;
             j++;
+            lastin = 'd';
         } 
     }
     else if(dir == 2) //Starting direction down
@@ -225,6 +252,7 @@ void init_snake(int max_y,int max_x)
             current.y = (max_y / 2);
             snake[j] = current;
             j++;
+            lastin = 's';
         }  
     }
     else if (dir == 3) //Starting direction left
@@ -235,6 +263,7 @@ void init_snake(int max_y,int max_x)
             current.y = max_y / 2;
             snake[j] = current;
             j++;
+            lastin = 'a';
         } 
     }
 
@@ -296,6 +325,9 @@ void lose_game()
         mvprintw(max_y/2 + 1, (max_x/2) - 4,"Final score: %d", snakesize);
     attroff(A_BOLD);
     attroff(COLOR_PAIR(3));
+
+    mvprintw(max_y/2 + 2, (max_x/2) - 15,"Would you like to play again? (y/n)");
+
     refresh();
     sleep(1);
 }
@@ -321,6 +353,9 @@ void win_game()
         mvprintw(max_y/2 + 1, (max_x/2) - 4,"Final score: %d", snakesize);
     attroff(A_BOLD);
     attroff(COLOR_PAIR(4));
+
+    mvprintw(max_y/2 + 2, (max_x/2) - 15,"Would you like to play again? (y/n)");
+
     refresh();
     sleep(1);
 }
@@ -342,9 +377,11 @@ void detect_collision()
     char* nxtpos = (char*) calloc(2, sizeof(char));
 
     mvinnstr(next_snake_y, next_snake_x, nxtpos, 1);
-    if(nxtpos[0] == 'S')
+    if(nxtpos[0] == 'S'){
         game_over = true;
-
+        free(nxtpos);
+        return;
+    }
     free(nxtpos);
 
     //collision with trophy
@@ -355,15 +392,8 @@ void detect_collision()
         if (speed>80000)
             speed -= (trophy1.value * 500);
 
-        //if snakesize bigger than half the parameter, player wins
-        if(winsize > snakesize)        
-            gen_trph();
-        else{
-            erase();
-            // display game win screen
-            while(true)
-                win_game();
-        }
+        //generate new trophy
+        gen_trph();
         return;
     }
 }
@@ -502,4 +532,22 @@ void print_trph(){
     //if the current time exceeds time-to-live generate a new trophy
     if(currt > ttl)
         gen_trph();
+}
+
+/* Quentin Carr
+starts a new game and clears the screen*/
+int new_game(char fname[]){
+    system(fname);
+    echo();
+    erase();
+    endwin();
+    exit(0);
+}
+/* Quentin Carr
+clears the screen and ends game*/
+int end_game(){
+    echo();
+    erase();
+    endwin();
+    exit(0);
 }
