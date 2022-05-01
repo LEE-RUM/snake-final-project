@@ -193,7 +193,10 @@ void draw_borders(){
 
     int tleft = ttl-currt;
     attron(COLOR_PAIR(5));
+    
         mvprintw(0, (max_x/2) - 23,"Size: %d     Size To Win: %d     Trophy Life: %d", snakesize, winsize, tleft);
+        mvprintw(max_y/2 + 18, (max_x/2) - 18," HOW TO PLAY: W A S D / KEYPAF");    attron(COLOR_PAIR(5));
+
     attron(COLOR_PAIR(5));
             
 }
