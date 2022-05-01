@@ -230,7 +230,6 @@ void init_snake(int max_y,int max_x)
             current.y = (max_y / 2);
             snake[j] = current;
             j++;
-            lastin = 'w';    
         }
     }
     else if (dir == 1) //Starting direction right
@@ -241,7 +240,6 @@ void init_snake(int max_y,int max_x)
             current.y = max_y / 2;
             snake[j] = current;
             j++;
-            lastin = 'd';
         } 
     }
     else if(dir == 2) //Starting direction down
@@ -252,7 +250,6 @@ void init_snake(int max_y,int max_x)
             current.y = (max_y / 2);
             snake[j] = current;
             j++;
-            lastin = 's';
         }  
     }
     else if (dir == 3) //Starting direction left
@@ -263,7 +260,6 @@ void init_snake(int max_y,int max_x)
             current.y = max_y / 2;
             snake[j] = current;
             j++;
-            lastin = 'a';
         } 
     }
 
