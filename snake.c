@@ -12,7 +12,7 @@
 
 //Global Varibles
 int next_snake_x, next_snake_y, snakesize, dir, curdir, invin = 4, speed = 200000;
-int max_x, max_y, winsize, input, lastin;
+int max_x, max_y, winsize, input;
 time_t currt, ttl;
 bool game_over = false, moving = true, hlight = true;
 struct point{
@@ -93,28 +93,24 @@ int main(){
                 curdir= -1;
                 dir=0;
                 moving = true;
-                lastin = input;
                 break;
             case 's': // input to move down
                 next_snake_y++;
                 curdir = +1;
                 dir=2;
                 moving = true;
-                lastin = input;
                 break;
             case 'd': // input to move right
                 next_snake_x++;
                 curdir = +1;
                 dir=1;
                 moving = true;
-                lastin = input;
                 break;
             case 'a': // input to move left
                 next_snake_x--;
                 curdir= -1;
                 dir=3;
                 moving = true;
-                lastin = input;
                 break;
             default:
                 break;
@@ -209,7 +205,6 @@ void init_snake(int max_y,int max_x)
             current.y = (max_y / 2);
             snake[j] = current;
             j++;
-            lastin = 'w';    
         }
     }
     else if (dir == 1) //Starting direction right
@@ -220,7 +215,6 @@ void init_snake(int max_y,int max_x)
             current.y = max_y / 2;
             snake[j] = current;
             j++;
-            lastin = 'd';
         } 
     }
     else if(dir == 2) //Starting direction down
@@ -231,7 +225,6 @@ void init_snake(int max_y,int max_x)
             current.y = (max_y / 2);
             snake[j] = current;
             j++;
-            lastin = 's';
         }  
     }
     else if (dir == 3) //Starting direction left
@@ -242,7 +235,6 @@ void init_snake(int max_y,int max_x)
             current.y = max_y / 2;
             snake[j] = current;
             j++;
-            lastin = 'a';
         } 
     }
 
