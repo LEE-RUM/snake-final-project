@@ -28,3 +28,7 @@ REQUIREMENTS:
             It runs into itself; or
             The user attempts to reverse the snake's direction.
         The user wins the game if the snake's length grows to the length equal to half the perimeter of the border.
+
+GAMEPLAY:
+
+<img width="1433" alt="Screen Shot 2022-05-01 at 2 52 35 PM" src="https://user-images.githubusercontent.com/79949410/166160371-a199eaf7-4978-495a-aca1-4baa6b22807b.png">
